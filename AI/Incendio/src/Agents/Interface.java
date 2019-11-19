@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 import communication.GraphicalInterface;
 import communication.Incendio;
@@ -28,10 +29,9 @@ import java.lang.Math;
 public class Interface extends Agent {
 	
 	Interface manager = this;
-	private HashMap<AID,PosVehicle> localizacoes = new HashMap<AID,PosVehicle>(); 
 	Mapa mapa;
-	private GraphicalInterface graphicalinterface;
-	
+	GraphicalInterface graphicalinterface;
+
 	protected void setup() {
 		super.setup();
 		Object[] args = getArguments();
@@ -40,23 +40,9 @@ public class Interface extends Agent {
 		
 		
 		
-		
 		// Register Agent
-		DFAgentDescription dfd = new DFAgentDescription();
-		dfd.setName(getAID());
-		ServiceDescription sd = new ServiceDescription();
-		sd.setName(getLocalName());
-		sd.setType("manager");
-		dfd.addServices(sd);
+	
 		
-		
-
-
-		try {
-			DFService.register(this, dfd);
-		} catch (FIPAException fe) {
-			fe.printStackTrace();
-		}
 
 		
 		addBehaviour(new AtualizarInformacao());
@@ -71,6 +57,26 @@ public class Interface extends Agent {
 			
 			ACLMessage msg = receive();
 
+			if (msg != null ) { // receber atualizações				
+					try {
+						
+						if(msg.getContentObject().getClass() == Incendio.class ){
+							graphicalinterface.incendios = (Incendio[]) msg.getContentObject();
+
+						}
+						
+						else {
+							graphicalinterface.localizacoes = (HashMap<AID,PosVehicle>) msg.getContentObject();
+
+							
+						}
+					}
+					 catch (UnreadableException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				
+			}
 		}
 		
 		

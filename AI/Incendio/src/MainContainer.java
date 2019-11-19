@@ -178,8 +178,13 @@ public class MainContainer extends PApplet {
 		}
 		
 		public void draw(){
+	        
+			float new_width = width/GI.mapa.SizeX;
+	        float new_height = height/GI.mapa.SizeY;
+	        float size_x = width/GI.mapa.SizeX;
+	        float size_y = height/GI.mapa.SizeY;
 	    	
-	    	for(int i = 0;i < GI.mapa.SizeX ; i++) {
+	        for(int i = 0;i < GI.mapa.SizeX ; i++) {
 	    	
 	    		for(int d = 0;d < GI.mapa.SizeY; d++) {
 	    			
@@ -202,9 +207,22 @@ public class MainContainer extends PApplet {
 	    				break;
 	    			}
 	    			
-	    			rect(i * width/GI.mapa.SizeX,d * height/GI.mapa.SizeY,width/GI.mapa.SizeX,height/GI.mapa.SizeY);
+	    			rect(i * new_width,d * new_height,size_x,size_y);
 	    	
 	    		}
+	    		
+	    	
+	    	}
+	    	
+	        fill(1,1,0);
+	        
+	    	for(int i = 0; i < GI.incendios.length;i++) {
+	    		
+	    		float x = GI.incendios[i].get_Cor_x();
+	    		float y = GI.incendios[i].get_Cor_y();
+	    		
+	    		rect(x * new_width,y * new_height,size_x,size_y);
+	    		
 	    	}
 		}
 	

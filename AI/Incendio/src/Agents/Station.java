@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 import communication.Incendio;
 import communication.Mapa;
+import communication.PedidoCompleto;
 import communication.PosVehicle;
 import jade.core.AID;
 import jade.core.Agent;
@@ -56,7 +57,7 @@ public class Station extends Agent {
 
 		
 		addBehaviour(new Update());
-		
+		addBehaviour(new UpdateInterface(this,1000));
 
 	}
 
@@ -181,6 +182,39 @@ public class Station extends Agent {
 		
 			
 				
+		}
+	}
+	
+private class UpdateInterface extends TickerBehaviour {
+
+		
+		public UpdateInterface(Agent agent,int time) {
+			super(agent,time);
+		
+		}
+		
+		public void AtualizarInterface() {
+			
+			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+			AID reader = new AID("Interface", AID.ISLOCALNAME);
+			msg.addReceiver(reader);
+			try {
+				msg.setContentObject((Serializable) localizacoes);
+				send(msg);	
+
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	
+		
+		public void onTick() {
+			
+							
+			AtualizarInterface();
+							
 		}
 	}
 
