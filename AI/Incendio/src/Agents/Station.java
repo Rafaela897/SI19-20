@@ -29,6 +29,8 @@ public class Station extends Agent {
 	Station manager = this;
 	private HashMap<AID,PosVehicle> localizacoes = new HashMap<AID,PosVehicle>(); 
 	ArrayList<Incendio> incendios;
+	ArrayList<Incendio> NAincendios;
+
 	Mapa mapa;
 	
 	protected void setup() {
@@ -36,8 +38,8 @@ public class Station extends Agent {
 
 		Object[] args = getArguments();
 		this.mapa =  (Mapa) args[0];
-		this.incendios = new ArrayList<Incendio>();
-		
+		this.incendios   = new ArrayList<Incendio>();
+		this.NAincendios = new ArrayList<Incendio>();
 		// Register Agent
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -65,19 +67,19 @@ public class Station extends Agent {
 	private class Update extends CyclicBehaviour {
 		
 		public void action() {
-			
 			ACLMessage msg = receive();
 
 			if (msg != null ) { // receber atualizações				
-					
+				System.out.println(msg.getSender());
 				try {
-					if(msg.getContentObject().getClass() == Incendio.class) {
-						System.out.println("new client");
-						new_client(msg);
+					String ontology = msg.getOntology();
+					if(ontology.equals("fires")) {
+						System.out.println("new fire");
+						new_incendio(msg);
 						
 					}
 
-					if(msg.getContentObject().getClass() == PosVehicle.class) {
+					if(ontology.equals("coordenadas")) {
 						atualizarCordenadas(msg);
 					}
 					
@@ -99,7 +101,7 @@ public class Station extends Agent {
 
 		}
 		
-		public void new_client(ACLMessage msg) {
+		public void new_incendio(ACLMessage msg) {
 			try {
 				Incendio incendio =  (Incendio) msg.getContentObject();
 
@@ -146,26 +148,25 @@ public class Station extends Agent {
 								DFAgentDescription dfd1 = results[melhor_taxi];
 								AID provider = dfd1.getName();
 
-								msg = new ACLMessage(ACLMessage.REQUEST);
-								msg.addReceiver(provider);
-								msg.setContentObject((Serializable) incendio);
-								
-								send(msg);
+								ACLMessage new_msg = new ACLMessage(ACLMessage.REQUEST);
+								new_msg.addReceiver(provider);
+								new_msg.setContentObject((Serializable) incendio);
+								new_msg.setOntology("job");
+								send(new_msg);
 								
 					}
 					
 					if(melhor_taxi == -1) {
-						incendios.add(incendio);
+						NAincendios.add(incendio);
 					}
 							
 						}
 				
 				if(results.length <= 0) {
-					incendios.add(incendio);
+					NAincendios.add(incendio);
 				}
 					
-				
-			
+				incendios.add(incendio);
 			}
 			 catch (FIPAException e) {
 				// TODO Auto-generated catch block
@@ -199,8 +200,14 @@ private class UpdateInterface extends TickerBehaviour {
 			AID reader = new AID("Interface", AID.ISLOCALNAME);
 			msg.addReceiver(reader);
 			try {
-				msg.setContentObject((Serializable) localizacoes);
+				msg.setOntology("info_fires");
+				Incendio[] ArrayIncendios = new Incendio[incendios.size()];
+				ArrayIncendios = incendios.toArray(ArrayIncendios);
+				msg.setContentObject((Serializable) ArrayIncendios);
 				send(msg);	
+				msg.setOntology("info_loc");
+				msg.setContentObject((Serializable) localizacoes);
+				send(msg);
 
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

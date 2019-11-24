@@ -59,13 +59,14 @@ public class Interface extends Agent {
 
 			if (msg != null ) { // receber atualizações				
 					try {
-						
-						if(msg.getContentObject().getClass() == Incendio.class ){
+						String ontology  = msg.getOntology();
+						if(ontology.equals("info_fires") ){
+							System.out.println(msg.getSender());
 							graphicalinterface.incendios = (Incendio[]) msg.getContentObject();
 
 						}
 						
-						else {
+						else if(ontology.equals("info_loc")){
 							graphicalinterface.localizacoes = (HashMap<AID,PosVehicle>) msg.getContentObject();
 
 							

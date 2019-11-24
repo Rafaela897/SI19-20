@@ -50,8 +50,10 @@ public class Incendiario extends Agent {
 			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 			
 			
-			float cor_x = (float) Math.random() * 100;
-			float cor_y = (float) Math.random() * 100;
+			float cor_x = (float) (int)  (Math.random() * Constants.SizeX);
+			float cor_y = (float) (int)  (Math.random() * Constants.SizeY);
+			
+			System.out.println("" + cor_x + "|" + cor_y );
 			
 			if(mapa.get_type(cor_x, cor_y) == Constants.RuralZone 
 					|| mapa.get_type(cor_x,cor_y) == Constants.ResidentialZone) {
@@ -59,6 +61,7 @@ public class Incendiario extends Agent {
 			Incendio incendio = new Incendio(cor_x,cor_y);			
 			AID reader = new AID("Station", AID.ISLOCALNAME);
 			msg.addReceiver(reader);
+			msg.setOntology("fires");
 			try {
 				msg.setContentObject((Serializable) incendio);
 				send(msg);	

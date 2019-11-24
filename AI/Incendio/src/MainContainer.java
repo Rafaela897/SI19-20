@@ -2,11 +2,16 @@
 
 import jade.core.Runtime;
 
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import PathFinding.Pathfinding;
 import communication.GraphicalInterface;
 import communication.Mapa;
+import communication.Pos;
+import communication.PosVehicle;
 import constants.Constants;
+import jade.core.AID;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.wrapper.AgentController;
@@ -103,7 +108,8 @@ public class MainContainer extends PApplet {
 		populateCells(mapa,Constants.GasStation,x,y,Constants.Nr_GasStationCells);
 				
 		populateCells(mapa,Constants.ResidentialZone,x,y,Constants.Nr_ResidentialCells);
-
+		
+		populateCells(mapa,Constants.WaterReservoir,x,y,Constants.Nr_WaterReservoirs);
 
 		return mapa;
 	
@@ -134,6 +140,18 @@ public class MainContainer extends PApplet {
 		
 		Mapa mapa = createNewMap(Constants.SizeX,Constants.SizeY);
 		
+		
+		Pos[] shortestPath = Pathfinding.djikstra(mapa, 0, 0, 10, 10);
+		int distancia = Pathfinding.distancia(0, 0, 10, 10);
+		System.out.println(shortestPath.length);
+		System.out.println(distancia);
+
+		for(int i = 0; i < shortestPath.length; i++)
+			System.out.println(""  + shortestPath[i].x + "," + shortestPath[i].y);
+		
+		System.out.println(shortestPath.length);
+
+		
 		GI = new GraphicalInterface(mapa);
 		
 		a.startAgentInPlatform("Station", "Agents.Station",new Object[] {mapa});
@@ -147,7 +165,9 @@ public class MainContainer extends PApplet {
 		// Example of Agent Creation in new container
 		
 		for(int i = 0 ; i < Constants.Nr_Trucks ; i++) {
-			a.startAgentInPlatform("Truck" + i, "Agents.Truck" , new Object[] {mapa,mapa.StationX,mapa.StationY} );
+			int x = (int) (Math.random() * Constants.SizeX);
+			int y = (int) (Math.random() * Constants.SizeY);
+			a.startAgentInPlatform("Truck" + i, "Agents.Truck" , new Object[] {mapa,x,y} );
 
 		}
 		
@@ -191,19 +211,23 @@ public class MainContainer extends PApplet {
 	    			switch(GI.mapa.get_type(i, d)) {
 	    				
 	    				case Constants.GasStation:
-	    				fill(256,0,256);
+	    				fill(64,62,61);
 	    				break;
 	    				
 	    				case Constants.FireStation:
-	    				fill(0,256,256);
+	    				fill(119,14,14);
 	    				break;
 	    				
 	    				case Constants.ResidentialZone:
-	    				fill(0,0,0);
+	    				fill(165,157,157);
+	    				break;
+	    				
+	    				case Constants.WaterReservoir:
+	    				fill(11,246,242);
 	    				break;
 	    				
 	    				default:
-	    				fill(256,256,256);
+	    				fill(27,253,0);
 	    				break;
 	    			}
 	    			
@@ -214,7 +238,7 @@ public class MainContainer extends PApplet {
 	    	
 	    	}
 	    	
-	        fill(1,1,0);
+	        fill(245,93,22);
 	        
 	    	for(int i = 0; i < GI.incendios.length;i++) {
 	    		
@@ -224,8 +248,41 @@ public class MainContainer extends PApplet {
 	    		rect(x * new_width,y * new_height,size_x,size_y);
 	    		
 	    	}
-		}
+	    	
+	    	AID[] KeysArr = new AID[GI.localizacoes.size()];
+	    	AID[] loc_keys = (AID[]) GI.localizacoes.keySet().toArray(KeysArr);
+	    	
+ 	    	for(int i = 0; i < loc_keys.length ;i++){ 
+ 	    		PosVehicle posV = GI.localizacoes.get(loc_keys[i]);
+ 	    		Object class_ = loc_keys[i].getLocalName().replaceAll("[0-9]", "") ;
+ 	    		
+ 	    	
+ 	    		
+ 	    		if(class_.equals("Truck")) {
+    				fill(232,255,6);
+ 	    		}
+ 	    		
+ 	    		if(class_.equals("Aircraft")) {
+ 	    			fill(244,255,133);
+ 	    		}
+ 	    		
+ 	    		if(class_.equals("Drone")) {
+    				fill(104,115,0);
+ 	    		}
+ 	    		
+ 	    		float x = posV.get_x();
+	    		float y = posV.get_y();
+	    		
+	    		rect(x * new_width,y * new_height,size_x,size_y);
+
+ 	    		
+ 	    	}
+ 	    	
+ 	    	}
+ 	    }
+	
+
 	
 			
-	}
+	
 	

@@ -9,6 +9,7 @@ import PathFinding.Pathfinding;
 import communication.Incendio;
 import communication.Mapa;
 import communication.PedidoCompleto;
+import communication.Pos;
 import communication.PosVehicle;
 import jade.core.AID;
 import jade.core.Agent;
@@ -30,8 +31,8 @@ public class Vehicle extends Agent {
 	float Curr_posX;
 	float Curr_posY;
 	
-	int Fuel;
-	int FuelCapacity;
+	public int Fuel;
+	public int FuelCapacity;
 	
 	int Water;
 	int WaterCapacity;
@@ -40,7 +41,7 @@ public class Vehicle extends Agent {
 	
 	int Free;
 	
-	PosVehicle destination[];
+	Pos destination[];
 	
 	Mapa mapa;
 	
@@ -69,8 +70,8 @@ public class Vehicle extends Agent {
 			fe.printStackTrace();
 		}
 		
-		addBehaviour(new Move(this,1000)); // fazer a compra de um produto
-		addBehaviour(new ReceberDiretivas()); // saber se a requisi��o teve sucesso
+		addBehaviour(new Move(this,1000)); 
+		addBehaviour(new ReceberDiretivas());
 		addBehaviour(new AtualizarInformacao(this,1000));
 	}
 	
@@ -89,6 +90,7 @@ public class Vehicle extends Agent {
 			
 			PosVehicle posicao = new PosVehicle(Curr_posX , Curr_posY,Fuel,FuelCapacity,Water,WaterCapacity,Velocity);
 			AID reader = new AID("Station", AID.ISLOCALNAME);
+			msg.setOntology("coordenadas");
 			msg.addReceiver(reader);
 			try {
 				msg.setContentObject((Serializable) posicao);
@@ -117,7 +119,9 @@ public class Vehicle extends Agent {
 			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 			PedidoCompleto completo = new PedidoCompleto(1,Curr_posX,Curr_posY);
 			AID reader = new AID("Station", AID.ISLOCALNAME);
+			msg.setOntology("pedido");
 			msg.addReceiver(reader);
+			
 			try {
 				msg.setContentObject((Serializable) completo);
 				send(msg);	
@@ -143,8 +147,8 @@ public class Vehicle extends Agent {
 						
 						Fuel--;
 						Work_progress++;
-						Curr_posX = destination[Work_progress].get_x();
-						Curr_posY = destination[Work_progress].get_y();
+						Curr_posX = destination[Work_progress].x;
+						Curr_posY = destination[Work_progress].y;
 						
 						if(Work_progress == destination.length) {
 							
@@ -168,14 +172,16 @@ public class Vehicle extends Agent {
 	public class ReceberDiretivas extends CyclicBehaviour {
 		public void action() {
 			ACLMessage message = receive();
-			if (message != null) {
+			if (message != null && message.getOntology().equals("job")) {
+				System.out.println(message.getSender());
+
 				try {
 					Incendio pedido = (Incendio) message.getContentObject();
 					
 					int cordenada_x = (int) pedido.get_Cor_x(); 
 					int cordenada_y = (int) pedido.get_Cor_y();
 					
-					destination = Pathfinding.find_path(mapa,(int) Curr_posX,(int) Curr_posY,cordenada_x,cordenada_y);
+					//destination = Pathfinding.find_path(mapa,(int) Curr_posX,(int) Curr_posY,cordenada_x,cordenada_y, cordenada_y, cordenada_y);
 					
 					Free = 1;
 					System.out.println("Nova diretiva");
