@@ -223,7 +223,7 @@ public class Pathfinding {
 		return null;
 	}
 	
-	public static Pos[] path_nearest_water_reservoir(Mapa mapa,int Curr_posX,int Curr_posY,int Fuel) {
+	public static Pos[] path_nearest_water_reservoir(Mapa mapa,int Curr_posX,int Curr_posY,int Fuel,int FuelCapacity) {
 		
 		ArrayList<Pos> water_reservoirs = FindByType(mapa,Constants.WaterReservoir);
 		
@@ -241,8 +241,29 @@ public class Pathfinding {
 			}
 		}
 		
+		ArrayList<Pos> gas_stations = FindByType(mapa,Constants.GasStation);
+		
+		gas_stations.sort((gs1,gs2) -> distancia(gs1.x,gs1.y,Curr_posX,Curr_posY)  <
+				distancia(gs2.x,gs2.y,Curr_posX,Curr_posY) 
+				? 1:0 );
+		
+		for(int i = 0; i < gas_stations.size();i++) {
+			for(int d = 0;i < water_reservoirs.size();d++) {
+				Pos[] pos_to_gs  = djikstra(mapa,Curr_posX,Curr_posY,gas_stations.get(i).x,gas_stations.get(i).y);
+				Pos[] gs_to_wr = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,
+						water_reservoirs.get(d).x,water_reservoirs.get(d).y);
+				
+				if(Fuel >= pos_to_gs.length && FuelCapacity >= gs_to_wr.length ) {
+					return concatArrays(pos_to_gs,gs_to_wr);
+				}
+			}
+			
+		}
+		
 		return null;
 	}
+	
+
 	
 	public static int distancia(int pointaX,int pointaY,int pointbX,int pointbY) {
 

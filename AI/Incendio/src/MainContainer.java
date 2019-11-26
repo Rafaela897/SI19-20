@@ -20,14 +20,8 @@ import jade.wrapper.ControllerException;
 import jade.wrapper.StaleProxyException;
 import processing.core.PApplet;
 
-/**
- * 
- */
 
-/**
- * @author Filipe Gonalves
- *
- */
+
 public class MainContainer extends PApplet {
 
 	Runtime rt;
@@ -120,23 +114,7 @@ public class MainContainer extends PApplet {
 
 		a.initMainContainerInPlatform("localhost", "9888", "MainContainer");
 		
-		
-		
-		/*int n = 0;
-		int limit = 100; // Limit number of Customers
-		try {
-			while (n<limit) {   //novo Costumer a cada segundo at� ter 10 Costumers
-				a.startAgentInPlatform("Customer " + n, "Agents.Customer");
-				n++;
-				Thread.sleep(1000);
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		*/
-		
-		
-		// Example of Container Creation (not the main container)
+	
 		
 		Mapa mapa = createNewMap(Constants.SizeX,Constants.SizeY);
 		
@@ -172,13 +150,17 @@ public class MainContainer extends PApplet {
 		}
 		
 		for(int i = 0 ; i < Constants.Nr_Aircrafts ; i++) {
-			a.startAgentInPlatform("Aircraft" + i, "Agents.Aircraft" , new Object[] {mapa,mapa.StationX,mapa.StationY} );
+			int x = (int) (Math.random() * Constants.SizeX);
+			int y = (int) (Math.random() * Constants.SizeY);
+			a.startAgentInPlatform("Aircraft" + i, "Agents.Aircraft" , new Object[] {mapa,x,y} );
 
 		}
 		
 		
 		for(int i = 0;i < Constants.Nr_Drones ; i++) {
-			a.startAgentInPlatform("Drone" + i, "Agents.Drone" , new Object[] {mapa,mapa.StationX,mapa.StationY} );
+			int x = (int) (Math.random() * Constants.SizeX);
+			int y = (int) (Math.random() * Constants.SizeY);
+			a.startAgentInPlatform("Drone" + i, "Agents.Drone" , new Object[] {mapa,x,y} );
 
 		}
 		

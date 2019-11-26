@@ -28,8 +28,8 @@ public class Vehicle extends Agent {
 
 	int Work_progress = 0;
 	
-	float Curr_posX;
-	float Curr_posY;
+	int Curr_posX;
+	int Curr_posY;
 	
 	public int Fuel;
 	public int FuelCapacity;
@@ -45,15 +45,18 @@ public class Vehicle extends Agent {
 	
 	Mapa mapa;
 	
+	Incendio incendio_corrente;
+	
 	protected void setup() {
 		super.setup();
 		
 		Object[] args = getArguments();
 		
 		this.mapa = (Mapa)args[0];
-		this.Curr_posX = (float) (int) args[1];
-		this.Curr_posY = (float) (int) args[2];
+		this.Curr_posX = (int) args[1];
+		this.Curr_posY = (int) args[2];
 		this.Free = 0;
+		this.incendio_corrente = null;
 		
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -176,14 +179,17 @@ public class Vehicle extends Agent {
 				System.out.println(message.getSender());
 
 				try {
-					Incendio pedido = (Incendio) message.getContentObject();
+
+					Incendio pedido = incendio_corrente = (Incendio) message.getContentObject();
+					
 					
 					int cordenada_x = (int) pedido.get_Cor_x(); 
 					int cordenada_y = (int) pedido.get_Cor_y();
 					
-					//destination = Pathfinding.find_path(mapa,(int) Curr_posX,(int) Curr_posY,cordenada_x,cordenada_y, cordenada_y, cordenada_y);
+					destination = Pathfinding.find_path(mapa,(int) Curr_posX,(int) Curr_posY,cordenada_x,cordenada_y, cordenada_y, cordenada_y);
 					
 					Free = 1;
+					System.out.println("" + destination.length);
 					System.out.println("Nova diretiva");
 				}
 				catch (UnreadableException e) {

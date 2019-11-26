@@ -4,15 +4,15 @@ import java.io.Serializable;
 
 public class PosVehicle implements Serializable{
 	
-	public float cor_x;
-	public float cor_y;
+	public int cor_x;
+	public int cor_y;
 	public int fuel;
 	public int fuel_capacity;
 	public int water;
 	public int water_capactity;
 	public int speed;
 	
-	public PosVehicle(float cor_x,float cor_y,int fuel,int fuel_capacity,
+	public PosVehicle(int cor_x,int cor_y,int fuel,int fuel_capacity,
 				int water,int water_capacity,int speed) {
 		
 		this.cor_x = cor_x;
@@ -27,12 +27,12 @@ public class PosVehicle implements Serializable{
 	
 
 
-	public float get_x() {
+	public int get_x() {
 		return this.cor_x;
 		
 	}
 	
-	public float get_y() {
+	public int get_y() {
 		return this.cor_y;
 	}
 }
