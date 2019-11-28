@@ -4,5 +4,8 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="libs/jade.jar"/>
 	<classpathentry kind="lib" path="libs/core.jar"/>
+	<classpathentry kind="lib" path="C:/Users/hugoa/Desktop/classes1920/ai/Jess71p2/lib"/>
+	<classpathentry kind="lib" path="C:/Users/hugoa/Desktop/classes1920/ai/Jess71p2/lib/jess.jar"/>
+	<classpathentry kind="lib" path="C:/Users/hugoa/Desktop/classes1920/ai/Jess71p2/lib/jsr94.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

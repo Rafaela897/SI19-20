@@ -22,7 +22,6 @@ public class Incendiario extends Agent {
 
 	
 	Mapa mapa;
-	//por como argumento o numero e guadar no tipo
 	
 	
 	protected void setup() {
@@ -50,15 +49,18 @@ public class Incendiario extends Agent {
 			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 			
 			
-			float cor_x = (float) (int)  (Math.random() * Constants.SizeX);
-			float cor_y = (float) (int)  (Math.random() * Constants.SizeY);
+			int cor_x = (int)  (Math.random() * Constants.SizeX);
+			int cor_y = (int)  (Math.random() * Constants.SizeY);
 			
 			System.out.println("" + cor_x + "|" + cor_y );
 			
 			if(mapa.get_type(cor_x, cor_y) == Constants.RuralZone 
-					|| mapa.get_type(cor_x,cor_y) == Constants.ResidentialZone) {
+					|| mapa.get_type(cor_x,cor_y) == Constants.ResidentialZone
+					|| mapa.get_type(cor_x, cor_y) == Constants.FireStation) {
 			
-			Incendio incendio = new Incendio(cor_x,cor_y);			
+		
+			
+			Incendio incendio = new Incendio(cor_x,cor_y,mapa.get_type(cor_x, cor_y));			
 			AID reader = new AID("Station", AID.ISLOCALNAME);
 			msg.addReceiver(reader);
 			msg.setOntology("fires");

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
+import PathFinding.Pathfinding;
 import communication.Incendio;
 import communication.Mapa;
 import communication.PedidoCompleto;
@@ -21,7 +23,14 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
-
+import jess.Context;
+import jess.Fact;
+import jess.JessException;
+import jess.RU;
+import jess.Rete;
+import jess.Userfunction;
+import jess.Value;
+import jess.ValueVector;
 
 import java.lang.Math;
 
@@ -30,7 +39,7 @@ public class Station extends Agent {
 	private HashMap<AID,PosVehicle> localizacoes = new HashMap<AID,PosVehicle>(); 
 	ArrayList<Incendio> incendios;
 	ArrayList<Incendio> NAincendios;
-
+	Rete engine;
 	Mapa mapa;
 	
 	protected void setup() {
@@ -48,7 +57,15 @@ public class Station extends Agent {
 		sd.setType("Station");
 		dfd.addServices(sd);
 		
+		engine = new Rete();
 		
+		try {
+			engine.batch("src/fire_allocation.clp");
+			engine.reset();
+		} catch (JessException e) {
+			// TODO Auto-genserated catch block
+			e.printStackTrace();
+		}
 
 
 		try {
@@ -60,9 +77,188 @@ public class Station extends Agent {
 		
 		addBehaviour(new Update());
 		addBehaviour(new UpdateInterface(this,1000));
-
+		addBehaviour(new AlocarIncendios(this,200));
 	}
 
+
+	private class AlocarIncendios extends TickerBehaviour {
+
+		public AlocarIncendios(Agent a, long period) {
+			super(a, period);
+			// TODO Auto-generated constructor stub
+		}
+		
+		/*
+		public class getScore implements Userfunction
+		{
+			public String getName() {return "getDistance";}
+			
+			public Value call(ValueVector vv,Context context) throws JessException
+			{
+				return new Value(getDistance(vv.get(1).intValue(context),vv.get(2).intValue(context),
+						vv.get(3).intValue(context),vv.get(4).intValue(context)),RU.INTEGER);
+			}
+		}
+		
+		public int getDistance(int x1,int y1,int x2,int y2) throws JessException {
+			
+				return  Pathfinding.distancia(x1, y1, x2, y2);
+			
+		}
+		*/
+		
+		public int getScore(PosVehicle v,Incendio fire) {
+			return Pathfinding.distancia(v.get_x(), v.get_y(),fire.cor_x, fire.cor_y) / v.speed 
+				   - v.fuel - v.fuel_capacity ;
+			
+		}
+		public void addVehicleFact(String name,PosVehicle v,Incendio fire,Rete engine) {
+			
+			int score = getScore(v,fire);
+			
+			try {
+				
+				Fact f = new Fact("vehicle", engine);
+				f.setSlotValue("score", new Value(score, RU.INTEGER));
+				f.setSlotValue("name", new Value(name, RU.STRING));
+				engine.assertFact(f);
+
+
+			} catch (JessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		public void addFireFact(String name,Rete engine) {
+			
+			
+			try {
+				
+				Fact f = new Fact("fire", engine);
+				f.setSlotValue("name", new Value(name, RU.STRING));
+				engine.assertFact(f);
+
+
+			} catch (JessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
+		@Override
+		protected void onTick() {
+			// TODO Auto-generated method stub
+			
+
+			NAincendios.sort((i1,i2) -> i1.gravity < i2.gravity  ? 1:0 );
+			
+			int incendioX,incendioY;
+			
+			DFAgentDescription dfd = new DFAgentDescription();
+			
+			
+			
+
+			HashMap<String,AID> v = new HashMap<String,AID>();
+			
+			try {
+				
+				DFAgentDescription[] results = DFService.search(this.myAgent, dfd);
+				for (int d = 0; d < results.length; d++) {
+					// Agent Found
+					
+					AID vehicle = results[d].getName();
+					
+					PosVehicle cordenada = localizacoes.get(vehicle);
+					
+					
+					if(cordenada != null) 
+						v.put(vehicle.toString(),vehicle);
+					
+					
+				}
+			
+			} catch (FIPAException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			
+			try {
+				
+				ArrayList<Incendio> New_NAincendios = (ArrayList<Incendio>) NAincendios.clone(); 
+				
+				for(int i = 0; i < NAincendios.size();i++) {
+					
+					
+					Incendio fire = NAincendios.get(i);
+					
+					for(String key: v.keySet()) {
+						addVehicleFact(key,localizacoes.get(v.get(key)),fire,engine);
+					}
+					
+					
+					
+					
+					addFireFact("fire",engine);
+					
+					
+					engine.run();
+					//engine.eval("(facts)");
+					
+					
+					
+					Iterator iterator = engine.listFacts();
+
+					
+					AID best_vehicle = null; 
+					while(iterator.hasNext()) {
+						Fact fact = (Fact) iterator.next();
+						if(fact.getName().equals("MAIN::allocation")) {
+							System.out.println(v.get(fact.getSlotValue("vehiclename"))+ "");
+							best_vehicle = v.get(fact.getSlotValue("vehiclename"));
+							v.remove(best_vehicle);
+							break;
+						}
+					}
+					
+					
+					if(best_vehicle != null) {
+						
+					System.out.println("starting work");
+					
+					
+					ACLMessage new_msg = new ACLMessage(ACLMessage.REQUEST);
+					new_msg.addReceiver(best_vehicle);
+					new_msg.setContentObject((Serializable) fire);
+					new_msg.setOntology("job");
+					send(new_msg);
+					
+					New_NAincendios.remove(fire);
+					
+					}
+					
+					engine.reset();
+					
+					
+					
+				}
+				
+				NAincendios = New_NAincendios;
+				
+
+				//f.setSlotValue("content", new Value(msg.getContent(), RU.STRING));
+				
+			} catch (JessException | IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+		
+	}
 
 	private class Update extends CyclicBehaviour {
 		
@@ -70,12 +266,12 @@ public class Station extends Agent {
 			ACLMessage msg = receive();
 
 			if (msg != null ) { // receber atualizações				
-				System.out.println(msg.getSender());
+				//System.out.println(msg.getSender());
 				try {
 					String ontology = msg.getOntology();
 					if(ontology.equals("fires")) {
 						System.out.println("new fire");
-						new_incendio(msg);
+						new_fire(msg);
 						
 					}
 
@@ -92,12 +288,26 @@ public class Station extends Agent {
 				}
 				}
 		
+		public void new_fire(ACLMessage msg) {
+			
+			try {
+				
+				Incendio incendio = (Incendio) msg.getContentObject();
+				NAincendios.add(incendio);
+				incendios.add(incendio);
+				
+			} catch (UnreadableException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
 		public void atualizarCordenadas(ACLMessage msg) throws UnreadableException {
 			PosVehicle cordenada =  (PosVehicle) msg.getContentObject();
 			
 			AID sender = msg.getSender();
 			localizacoes.put(sender, cordenada);
-			System.out.println("Coordenas atualizadas " + msg.getSender() );
+			//System.out.println("Coordenas atualizadas " + msg.getSender() );
 
 		}
 		

@@ -28,8 +28,8 @@ public class Vehicle extends Agent {
 
 	int Work_progress = 0;
 	
-	float Curr_posX;
-	float Curr_posY;
+	int Curr_posX;
+	int Curr_posY;
 	
 	public int Fuel;
 	public int FuelCapacity;
@@ -45,30 +45,23 @@ public class Vehicle extends Agent {
 	
 	Mapa mapa;
 	
+	Incendio incendio_corrente;
+	
 	protected void setup() {
 		super.setup();
 		
 		Object[] args = getArguments();
 		
 		this.mapa = (Mapa)args[0];
-		this.Curr_posX = (float) (int) args[1];
-		this.Curr_posY = (float) (int) args[2];
+		this.Curr_posX = (int) args[1];
+		this.Curr_posY = (int) args[2];
 		this.Free = 0;
+		this.incendio_corrente = null;
 		
-		DFAgentDescription dfd = new DFAgentDescription();
-		dfd.setName(getAID());
-		ServiceDescription sd = new ServiceDescription();
-		sd.setName(getLocalName());
-		sd.setType("Vehicle");
+	
+		 register();
 		
-		dfd.addServices(sd);
-		 
 		
-		try {
-			DFService.register(this, dfd);
-		} catch (FIPAException fe) {
-			fe.printStackTrace();
-		}
 		
 		addBehaviour(new Move(this,1000)); 
 		addBehaviour(new ReceberDiretivas());
@@ -143,19 +136,27 @@ public class Vehicle extends Agent {
 				
 				else {
 					
+					
 					if(Fuel > 0 && Work_progress < destination.length ) {
+						
+						if(Work_progress == destination.length - 1) {
+							
+							Work_progress = 0;
+							Free = 0;
+							PedidoCompleto();
+							register();
+						}
+						
+						else {
 						
 						Fuel--;
 						Work_progress++;
 						Curr_posX = destination[Work_progress].x;
 						Curr_posY = destination[Work_progress].y;
 						
-						if(Work_progress == destination.length) {
+						}
+						
 							
-							Work_progress = 0;
-							Free = 0;
-							PedidoCompleto();
-						}	
 					}
 						
 				}
@@ -173,18 +174,33 @@ public class Vehicle extends Agent {
 		public void action() {
 			ACLMessage message = receive();
 			if (message != null && message.getOntology().equals("job")) {
-				System.out.println(message.getSender());
 
 				try {
-					Incendio pedido = (Incendio) message.getContentObject();
+					deregister();
+
+					System.out.println("Free: " + Free);
+					Incendio pedido = incendio_corrente = (Incendio) message.getContentObject();
+					
 					
 					int cordenada_x = (int) pedido.get_Cor_x(); 
 					int cordenada_y = (int) pedido.get_Cor_y();
 					
-					//destination = Pathfinding.find_path(mapa,(int) Curr_posX,(int) Curr_posY,cordenada_x,cordenada_y, cordenada_y, cordenada_y);
-					
+					System.out.println("" + Fuel);
+					System.out.println(Curr_posX + " : " + Curr_posY);
+
+					destination = Pathfinding.find_path(mapa,FuelCapacity,Fuel,(int) Curr_posX,(int) Curr_posY,cordenada_x,cordenada_y);
+					//destination = Pathfinding.djikstra(mapa,  cordenada_x, cordenada_y,(int) Curr_posX,(int) Curr_posY);
+
+
 					Free = 1;
+					
+					System.out.println(destination[destination.length-1].x + " : " + destination[destination.length-1].y);
+					System.out.println(cordenada_x + " : " + cordenada_y);
+					
+					System.out.println("" + destination.length);
 					System.out.println("Nova diretiva");
+
+					
 				}
 				catch (UnreadableException e) {
 					// TODO Auto-generated catch block
@@ -200,9 +216,32 @@ public class Vehicle extends Agent {
 
 
 
+	void register() {
+		
+		DFAgentDescription dfd = new DFAgentDescription();
+		dfd.setName(getAID());
+		ServiceDescription sd = new ServiceDescription();
+		sd.setName(getLocalName());
+		sd.setType("Vehicle");
+		
+		dfd.addServices(sd);
+		
+		try {
+			DFService.register(this, dfd);
+		} catch (FIPAException fe) {
+			fe.printStackTrace();
+		}
 	
+	}
 	
-
+	void deregister() {
+		try {
+			DFService.deregister(this);
+		} catch (FIPAException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	protected void takeDown() {
 		super.takeDown();
