@@ -27,9 +27,9 @@ public final class Constants {
 	public static final int FireStation     = 3;
 	public static final int WaterReservoir  = 4;
 
-	public static final int Nr_Trucks    =  2;
-	public static final int Nr_Drones    =  2;
-	public static final int Nr_Aircrafts =  2; 
+	public static final int Nr_Trucks    =  4;
+	public static final int Nr_Drones    =  4;
+	public static final int Nr_Aircrafts =  4; 
 	
 	public static final int Nr_GasStationCells  = 10;
 	public static final int Nr_ResidentialCells = 20;

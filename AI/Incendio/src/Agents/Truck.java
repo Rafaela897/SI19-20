@@ -25,11 +25,13 @@ public class Truck extends Vehicle {
 	
 	
 	protected void setup() {
-		super.setup();
-
 		this.Fuel = this.FuelCapacity  = Constants.TruckFuelCapacity;
 		this.Water = this.WaterCapacity = Constants.TruckWaterCapacity;
 		this.Velocity = Constants.AircraftVelocity;
+		
+		super.setup();
+
+		
 		
 		
 		

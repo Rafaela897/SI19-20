@@ -88,30 +88,13 @@ public class Station extends Agent {
 			// TODO Auto-generated constructor stub
 		}
 		
-		/*
-		public class getScore implements Userfunction
-		{
-			public String getName() {return "getDistance";}
-			
-			public Value call(ValueVector vv,Context context) throws JessException
-			{
-				return new Value(getDistance(vv.get(1).intValue(context),vv.get(2).intValue(context),
-						vv.get(3).intValue(context),vv.get(4).intValue(context)),RU.INTEGER);
-			}
-		}
-		
-		public int getDistance(int x1,int y1,int x2,int y2) throws JessException {
-			
-				return  Pathfinding.distancia(x1, y1, x2, y2);
-			
-		}
-		*/
 		
 		public int getScore(PosVehicle v,Incendio fire) {
 			return Pathfinding.distancia(v.get_x(), v.get_y(),fire.cor_x, fire.cor_y) / v.speed 
 				   - v.fuel - v.fuel_capacity ;
 			
 		}
+		
 		public void addVehicleFact(String name,PosVehicle v,Incendio fire,Rete engine) {
 			
 			int score = getScore(v,fire);
@@ -148,13 +131,7 @@ public class Station extends Agent {
 			
 		}
 		
-		@Override
-		protected void onTick() {
-			// TODO Auto-generated method stub
-			
-
-			NAincendios.sort((i1,i2) -> i1.gravity < i2.gravity  ? 1:0 );
-			
+		public AID allocate_fire(Incendio fire) {
 			int incendioX,incendioY;
 			
 			DFAgentDescription dfd = new DFAgentDescription();
@@ -164,6 +141,8 @@ public class Station extends Agent {
 
 			HashMap<String,AID> v = new HashMap<String,AID>();
 			
+			AID best_vehicle = null; 
+
 			try {
 				
 				DFAgentDescription[] results = DFService.search(this.myAgent, dfd);
@@ -189,75 +168,92 @@ public class Station extends Agent {
 			
 			try {
 				
-				ArrayList<Incendio> New_NAincendios = (ArrayList<Incendio>) NAincendios.clone(); 
-				
-				for(int i = 0; i < NAincendios.size();i++) {
-					
-					
-					Incendio fire = NAincendios.get(i);
-					
 					for(String key: v.keySet()) {
+						
 						addVehicleFact(key,localizacoes.get(v.get(key)),fire,engine);
 					}
 					
-					
-					
-					
 					addFireFact("fire",engine);
 					
-					
 					engine.run();
-					//engine.eval("(facts)");
-					
-					
 					
 					Iterator iterator = engine.listFacts();
 
 					
-					AID best_vehicle = null; 
+					
 					while(iterator.hasNext()) {
 						Fact fact = (Fact) iterator.next();
 						if(fact.getName().equals("MAIN::allocation")) {
 							System.out.println(v.get(fact.getSlotValue("vehiclename"))+ "");
 							best_vehicle = v.get(fact.getSlotValue("vehiclename"));
-							v.remove(best_vehicle);
 							break;
 						}
-					}
 					
 					
-					if(best_vehicle != null) {
-						
-					System.out.println("starting work");
 					
-					
-					ACLMessage new_msg = new ACLMessage(ACLMessage.REQUEST);
-					new_msg.addReceiver(best_vehicle);
-					new_msg.setContentObject((Serializable) fire);
-					new_msg.setOntology("job");
-					send(new_msg);
-					
-					New_NAincendios.remove(fire);
-					
-					}
 					
 					engine.reset();
 					
 					
 					
-				}
+					}
 				
-				NAincendios = New_NAincendios;
 				
 
 				//f.setSlotValue("content", new Value(msg.getContent(), RU.STRING));
 				
-			} catch (JessException | IOException e1) {
+			} catch (JessException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
+		
+		
+			
+			return best_vehicle;
+			
 		}
 		
+		@Override
+		protected void onTick() {
+			// TODO Auto-generated method stub
+			
+
+			NAincendios.sort((i1,i2) -> i1.gravity < i2.gravity  ? 1:0 );
+			
+			ArrayList<Incendio> New_NAincendios = (ArrayList<Incendio>) NAincendios.clone(); 
+			
+			for(int i = 0; i < New_NAincendios.size();i++) {
+			
+
+			Incendio fire = New_NAincendios.get(i);
+
+			AID best_vehicle = allocate_fire(fire);
+			
+			if(best_vehicle != null) {
+				
+				System.out.println("starting work");
+				
+				
+				ACLMessage new_msg = new ACLMessage(ACLMessage.REQUEST);
+				new_msg.addReceiver(best_vehicle);
+				try {
+					new_msg.setContentObject((Serializable) fire);
+					new_msg.setOntology("job");
+					NAincendios.remove(New_NAincendios.get(i));
+					send(new_msg);
+
+
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				
+				}
+				
+			}
+			
+		}	
 	}
 
 	private class Update extends CyclicBehaviour {
@@ -270,13 +266,23 @@ public class Station extends Agent {
 				try {
 					String ontology = msg.getOntology();
 					if(ontology.equals("fires")) {
-						System.out.println("new fire");
 						new_fire(msg);
 						
 					}
 
 					if(ontology.equals("coordenadas")) {
 						atualizarCordenadas(msg);
+					}
+					
+					if(ontology.equals("pedido")) {
+						System.out.println("pedido completo");
+						Incendio apagado = (Incendio) msg.getContentObject();
+						incendios.remove(apagado);
+					}
+					
+					if(ontology.equals("morte")) {
+						System.out.println("Veiculo " + msg.getSender() + " não está em condições de operar");
+						localizacoes.remove(msg.getSender());
 					}
 					
 					block();
@@ -311,89 +317,6 @@ public class Station extends Agent {
 
 		}
 		
-		public void new_incendio(ACLMessage msg) {
-			try {
-				Incendio incendio =  (Incendio) msg.getContentObject();
-
-				// Search DF
-				float cl_x = incendio.get_Cor_x();
-				float cl_y = incendio.get_Cor_y();
-				
-				DFAgentDescription dfd = new DFAgentDescription();
-				DFAgentDescription[] results = DFService.search(this.myAgent, dfd);
-				
-				if (results.length > 0) {
-					int melhor_taxi = -1;
-					float distancia = 999999999;
-					float new_distancia;
-					float cor_x;
-					float cor_y;
-					
-					
-					
-					for (int i = 0; i < results.length; ++i) {
-						// Agent Found
-						AID taxi = results[i].getName();
-						PosVehicle cordenada = localizacoes.get(taxi);
-						
-						if(cordenada != null) {
-							
-							cor_x = cordenada.get_x();
-							cor_y = cordenada.get_y();
-					
-							
-							new_distancia = (float) Math.sqrt(Math.pow(cor_x - cl_x,2) + Math.pow(cor_y - cl_y,2));
-						
-							if(new_distancia < distancia ) {
-								distancia = new_distancia;
-								melhor_taxi = i;
-							}
-						}
-					}
-							
-					
-					if(melhor_taxi != -1) {
-								
-								System.out.println("starting work");
-								DFAgentDescription dfd1 = results[melhor_taxi];
-								AID provider = dfd1.getName();
-
-								ACLMessage new_msg = new ACLMessage(ACLMessage.REQUEST);
-								new_msg.addReceiver(provider);
-								new_msg.setContentObject((Serializable) incendio);
-								new_msg.setOntology("job");
-								send(new_msg);
-								
-					}
-					
-					if(melhor_taxi == -1) {
-						NAincendios.add(incendio);
-					}
-							
-						}
-				
-				if(results.length <= 0) {
-					NAincendios.add(incendio);
-				}
-					
-				incendios.add(incendio);
-			}
-			 catch (FIPAException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			catch (UnreadableException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		
-			
-				
-		}
 	}
 	
 private class UpdateInterface extends TickerBehaviour {

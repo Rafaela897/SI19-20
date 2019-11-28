@@ -293,10 +293,11 @@ public class Pathfinding {
 				? 1:0 );
 		
 		for(int i = 0; i < gas_stations.size();i++) {
-			for(int d = 0;i < water_reservoirs.size();d++) {
-				Pos[] pos_to_gs  = djikstra(mapa,Curr_posX,Curr_posY,gas_stations.get(i).x,gas_stations.get(i).y);
-				Pos[] gs_to_wr = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,
-						water_reservoirs.get(d).x,water_reservoirs.get(d).y);
+			for(int d = 0;d < water_reservoirs.size();d++) {
+				Pos[] pos_to_gs  = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,
+						Curr_posX,Curr_posY);
+				Pos[] gs_to_wr = djikstra(mapa,water_reservoirs.get(d).x,water_reservoirs.get(d).y,
+						gas_stations.get(i).x,gas_stations.get(i).y);
 				
 				if(Fuel >= pos_to_gs.length && FuelCapacity >= gs_to_wr.length ) {
 					return concatArrays(pos_to_gs,gs_to_wr);
