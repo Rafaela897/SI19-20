@@ -220,6 +220,7 @@ public class Station extends Agent {
 						if(fact.getName().equals("MAIN::allocation")) {
 							System.out.println(v.get(fact.getSlotValue("vehiclename"))+ "");
 							best_vehicle = v.get(fact.getSlotValue("vehiclename"));
+							v.remove(best_vehicle);
 							break;
 						}
 					}
@@ -265,7 +266,7 @@ public class Station extends Agent {
 			ACLMessage msg = receive();
 
 			if (msg != null ) { // receber atualizações				
-				System.out.println(msg.getSender());
+				//System.out.println(msg.getSender());
 				try {
 					String ontology = msg.getOntology();
 					if(ontology.equals("fires")) {
@@ -306,7 +307,7 @@ public class Station extends Agent {
 			
 			AID sender = msg.getSender();
 			localizacoes.put(sender, cordenada);
-			System.out.println("Coordenas atualizadas " + msg.getSender() );
+			//System.out.println("Coordenas atualizadas " + msg.getSender() );
 
 		}
 		

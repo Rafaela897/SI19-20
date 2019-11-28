@@ -1,0 +1,4 @@
+--Station sends requests when vehicles are working
+--Find work for free vehicles
+--Allocate regions for vehicles at the beggining.
+--Take fires out of the list when extinct

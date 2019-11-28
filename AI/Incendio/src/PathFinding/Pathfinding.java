@@ -173,15 +173,27 @@ public class Pathfinding {
 		return types;
 	}
 	
-	public static Pos[] find_path(Mapa mapa,int FuelCapacity,int Fuel,
-	int Curr_posX,int Curr_posY,int incendioX,int incendioY) {
+	
+	public static Pos[] find_path_aux(Mapa mapa,int FuelCapacity,int Fuel,
+			int Curr_posX,int Curr_posY,int incendioX,int incendioY,ArrayList<Pos> gas_stations) {
+		
+		
 		
 		Pos[] shortest_path = djikstra(mapa,Curr_posX,Curr_posY,incendioX,incendioY);
 		
+	
+		System.out.println("shortest path " + shortest_path.length);
 		if(shortest_path.length <= FuelCapacity) 
 				return shortest_path;
+	
+		if(gas_stations.size() == 0)
+					return null;
 		
-		ArrayList<Pos> gas_stations = FindByType(mapa,Constants.GasStation);
+		System.out.println("needs gas");
+		
+		ArrayList<Pos> reachable = new ArrayList<Pos>();
+
+		ArrayList<Pos[]> gas_stations_routes = new ArrayList<Pos[]>();
 		
 		gas_stations.sort((gs1,gs2) -> distancia(gs1.x,gs1.y,Curr_posX,Curr_posY) + distancia(gs1.x,gs1.y,incendioX,incendioY) <
 				distancia(gs2.x,gs2.y,Curr_posX,Curr_posY) + distancia(gs2.x,gs2.y,incendioX,incendioY)
@@ -190,15 +202,48 @@ public class Pathfinding {
 		
 		for(int i = 0;i < gas_stations.size();i++) {
 			
-			Pos[] pos_to_gs  = djikstra(mapa,Curr_posX,Curr_posY,gas_stations.get(i).x,gas_stations.get(i).y);
-			Pos[] gs_to_fire = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,incendioX,incendioY);
+			Pos[] pos_to_gs  = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,Curr_posX,Curr_posY);
+			Pos[] gs_to_fire = djikstra(mapa,incendioX,incendioY,gas_stations.get(i).x,gas_stations.get(i).y);
 			
 			if(Fuel >= pos_to_gs.length && FuelCapacity >= gs_to_fire.length ) {
 				return concatArrays(pos_to_gs,gs_to_fire);
 			}
+			
+			else if(pos_to_gs.length <= Fuel) {
+				reachable.add(gas_stations.get(i));
+				gas_stations_routes.add(pos_to_gs);
+			}
 		}
 		
-		return null;
+		for(int i = 0; i < reachable.size();i++)
+			gas_stations.remove(reachable.get(i));
+		
+		for(int i = 0; i < reachable.size();i++) {
+			Pos[] caminho = find_path_aux(mapa,FuelCapacity,FuelCapacity,
+					incendioX,incendioY,reachable.get(i).x,reachable.get(i).y,gas_stations);
+			
+			if(caminho != null && FuelCapacity >= caminho.length)
+				return concatArrays(gas_stations_routes.get(i),caminho);
+			
+		}
+		
+			return null;
+		
+		
+		
+	}
+	
+	public static Pos[] find_path(Mapa mapa,int FuelCapacity,int Fuel,
+	int incendioX,int incendioY,int Curr_posX,int Curr_posY) {
+		
+		ArrayList<Pos> gas_stations = FindByType(mapa,Constants.GasStation);
+
+		
+		return find_path_aux(mapa,FuelCapacity,Fuel,
+				Curr_posX,Curr_posY,incendioX,incendioY,gas_stations);
+		
+		
+		
 		
 	}
 	
