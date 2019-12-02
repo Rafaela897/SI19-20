@@ -25,11 +25,12 @@ public class Aircraft extends Vehicle {
 	
 	
 	protected void setup() {
-		super.setup();
-		
 		this.Fuel = this.FuelCapacity  = Constants.AircraftFuelCapacity;
 		this.Water = this.WaterCapacity = Constants.AircraftWaterCapacity;
 		this.Velocity = Constants.AircraftVelocity ;
+		
+		
+		super.setup();
 		
 		
 	}

@@ -25,13 +25,14 @@ public class Drone extends Vehicle {
 
 	
 	protected void setup() {
-		super.setup();
-		
 		this.Fuel = this.FuelCapacity  = Constants.DroneFuelCapacity;
 		this.Water = this.WaterCapacity = Constants.DroneWaterCapacity;
 		this.Velocity = Constants.DroneVelocity ;
 		
 	
+		super.setup();
+		
+		
 	}
 
 	

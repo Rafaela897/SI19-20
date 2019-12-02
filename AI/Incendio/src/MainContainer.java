@@ -2,6 +2,7 @@
 
 import jade.core.Runtime;
 
+
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -134,7 +135,6 @@ public class MainContainer extends PApplet {
 		
 		a.startAgentInPlatform("Station", "Agents.Station",new Object[] {mapa});
 		
-		a.startAgentInPlatform("Incendiario", "Agents.Incendiario",new Object[] {mapa});
 
 		
 		a.startAgentInPlatform("Interface", "Agents.Interface",new Object[] {mapa,GI});
@@ -164,6 +164,8 @@ public class MainContainer extends PApplet {
 
 		}
 		
+		a.startAgentInPlatform("Incendiario", "Agents.Incendiario",new Object[] {mapa});
+
 		
 		
 		
@@ -201,7 +203,7 @@ public class MainContainer extends PApplet {
 	    				break;
 	    				
 	    				case Constants.ResidentialZone:
-	    				fill(165,157,157);
+	    				fill(255,157,157);
 	    				break;
 	    				
 	    				case Constants.WaterReservoir:

@@ -52,7 +52,7 @@ public class Incendiario extends Agent {
 			int cor_x = (int)  (Math.random() * Constants.SizeX);
 			int cor_y = (int)  (Math.random() * Constants.SizeY);
 			
-			System.out.println("" + cor_x + "|" + cor_y );
+			//System.out.println("" + cor_x + "|" + cor_y );
 			
 			if(mapa.get_type(cor_x, cor_y) == Constants.RuralZone 
 					|| mapa.get_type(cor_x,cor_y) == Constants.ResidentialZone
