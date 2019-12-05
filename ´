@@ -1,0 +1,43 @@
+modified ai-tp2
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch master
+# Your branch is up to date with 'origin/master'.
+#
+# Changes to be committed:
+#	modified:   AI/Incendio/.classpath
+#	modified:   AI/Incendio/bin/Agents/Incendiario$criaIncendio.class
+#	modified:   AI/Incendio/bin/Agents/Interface$AtualizarInformacao.class
+#	modified:   AI/Incendio/bin/Agents/Interface.class
+#	modified:   AI/Incendio/bin/Agents/Station$AlocarIncendios.class
+#	modified:   AI/Incendio/bin/Agents/Station$Update.class
+#	modified:   AI/Incendio/bin/Agents/Station$UpdateInterface.class
+#	modified:   AI/Incendio/bin/Agents/Station.class
+#	modified:   AI/Incendio/bin/Agents/Vehicle$Move.class
+#	modified:   AI/Incendio/bin/Agents/Vehicle$ReceberDiretivas.class
+#	new file:   AI/Incendio/bin/Agents/Vehicle$Update.class
+#	modified:   AI/Incendio/bin/Agents/Vehicle.class
+#	modified:   AI/Incendio/bin/MainContainer.class
+#	modified:   AI/Incendio/bin/PathFinding/Pathfinding.class
+#	new file:   AI/Incendio/bin/communication/DistressCall.class
+#	modified:   AI/Incendio/bin/communication/GraphicalInterface.class
+#	modified:   AI/Incendio/bin/communication/Incendio.class
+#	modified:   AI/Incendio/bin/communication/PosVehicle.class
+#	modified:   AI/Incendio/bin/constants/Constants.class
+#	modified:   AI/Incendio/bin/free_time_allocation.clp
+#	new file:   AI/Incendio/libs/jcommon-1.0.8.jar
+#	new file:   AI/Incendio/libs/jfreechart-1.0.13.jar
+#	modified:   AI/Incendio/src/Agents/Incendiario.java
+#	modified:   AI/Incendio/src/Agents/Interface.java
+#	modified:   AI/Incendio/src/Agents/Station.java
+#	modified:   AI/Incendio/src/Agents/Vehicle.java
+#	modified:   AI/Incendio/src/MainContainer.java
+#	modified:   AI/Incendio/src/PathFinding/Pathfinding.java
+#	new file:   AI/Incendio/src/communication/DistressCall.java
+#	modified:   AI/Incendio/src/communication/GraphicalInterface.java
+#	modified:   AI/Incendio/src/communication/Incendio.java
+#	modified:   AI/Incendio/src/communication/PosVehicle.java
+#	modified:   AI/Incendio/src/constants/Constants.java
+#	modified:   AI/Incendio/src/free_time_allocation.clp
+#
