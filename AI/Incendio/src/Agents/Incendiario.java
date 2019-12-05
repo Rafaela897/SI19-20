@@ -63,7 +63,7 @@ public class Incendiario extends Agent {
 			Incendio incendio = new Incendio(cor_x,cor_y,mapa.get_type(cor_x, cor_y));			
 			AID reader = new AID("Station", AID.ISLOCALNAME);
 			msg.addReceiver(reader);
-			msg.setOntology("fires");
+			msg.setPerformative(ACLMessage.PROPOSE);
 			try {
 				msg.setContentObject((Serializable) incendio);
 				send(msg);	

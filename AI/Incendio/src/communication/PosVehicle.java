@@ -35,4 +35,29 @@ public class PosVehicle implements Serializable{
 	public int get_y() {
 		return this.cor_y;
 	}
+	
+	
+
+	@Override
+	public int hashCode() {
+		return (200*this.cor_x^2 + this.cor_y^3*100 + 
+				this.fuel^2+1000 + this.fuel_capacity % 1000)%1000;
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(o == null)
+			return false;
+		if(this == o)
+			return true;
+		if(o instanceof PosVehicle) {
+			PosVehicle test = (PosVehicle) o;
+			
+			return (this.cor_x == test.cor_x && this.cor_y == test.cor_y);
+		}
+		
+		else {
+			return false;
+		}
+}
 }

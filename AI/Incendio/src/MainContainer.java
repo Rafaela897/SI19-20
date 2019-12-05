@@ -2,9 +2,16 @@
 
 import jade.core.Runtime;
 
-
+import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
 
 import PathFinding.Pathfinding;
 import communication.GraphicalInterface;
@@ -28,6 +35,7 @@ public class MainContainer extends PApplet {
 	Runtime rt;
 	ContainerController container;
 	static GraphicalInterface GI;
+	public int nr_statistics = 0;
 
 	public ContainerController initContainerInPlatform(String host, String port, String containerName) {
 		// Get the JADE runtime interface (singleton)
@@ -110,6 +118,7 @@ public class MainContainer extends PApplet {
 	
 	}
 	
+	
 	public static void main(String[] args)   {
 		MainContainer a = new MainContainer();
 
@@ -119,16 +128,6 @@ public class MainContainer extends PApplet {
 		
 		Mapa mapa = createNewMap(Constants.SizeX,Constants.SizeY);
 		
-		
-		Pos[] shortestPath = Pathfinding.djikstra(mapa, 0, 0, 10, 10);
-		int distancia = Pathfinding.distancia(0, 0, 10, 10);
-		System.out.println(shortestPath.length);
-		System.out.println(distancia);
-
-		for(int i = 0; i < shortestPath.length; i++)
-			System.out.println(""  + shortestPath[i].x + "," + shortestPath[i].y);
-		
-		System.out.println(shortestPath.length);
 
 		
 		GI = new GraphicalInterface(mapa);
@@ -139,6 +138,8 @@ public class MainContainer extends PApplet {
 		
 		a.startAgentInPlatform("Interface", "Agents.Interface",new Object[] {mapa,GI});
 
+		
+		
 		
 		// Example of Agent Creation in new container
 		
@@ -179,6 +180,33 @@ public class MainContainer extends PApplet {
 
 		public void setup(){
 			fill(120,50,240);
+		}
+		
+		
+		public void drawGraph() {
+			DefaultCategoryDataset pieDataset = new DefaultCategoryDataset();
+			pieDataset.addValue(GI.nr_incendios_total,"Numero de incendios","");
+			pieDataset.addValue(GI.incendios.length,"Numero de incendios correntes","");
+
+
+			//Create the chart
+			JFreeChart chart = ChartFactory.createBarChart(
+					"Simulador de Incendios",  "metrica", "contagem", pieDataset, PlotOrientation.HORIZONTAL, true, true, true);
+	    
+			//Save chart as PNG
+			try {
+				ChartUtilities.saveChartAsPNG(new File(Constants.statistics_path + "statistics" + nr_statistics++ + 
+						".png"), chart, 400, 300);
+			} catch (IOException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		public void mouseClicked() {
+			System.out.println("mouse clicked");
+			drawGraph();
+			
 		}
 		
 		public void draw(){

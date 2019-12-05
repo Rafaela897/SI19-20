@@ -12,7 +12,7 @@ public class GraphicalInterface {
 	public Mapa mapa;
 	public Incendio incendios[] = new Incendio[0];
 	public HashMap<AID,PosVehicle> localizacoes = new HashMap<AID,PosVehicle>(); 
-
+	public int nr_incendios_total;
 	
 	/*public GraphicalInterface(Mapa mapa) {
 		this.mapa = mapa;
@@ -20,6 +20,7 @@ public class GraphicalInterface {
 	
 	public GraphicalInterface(Mapa mapa) {
 		this.mapa = mapa;
+		this.nr_incendios_total = 0;
 	}
 	
 	

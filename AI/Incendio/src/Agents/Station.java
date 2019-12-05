@@ -3,14 +3,17 @@ package Agents;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import PathFinding.Pathfinding;
+import communication.DistressCall;
 import communication.Incendio;
 import communication.Mapa;
 import communication.PedidoCompleto;
 import communication.PosVehicle;
+import constants.Constants;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.ContainerID;
@@ -23,6 +26,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
+import jade.tools.sniffer.Message;
 import jess.Context;
 import jess.Fact;
 import jess.JessException;
@@ -36,11 +40,15 @@ import java.lang.Math;
 
 public class Station extends Agent {
 	Station manager = this;
+	
 	private HashMap<AID,PosVehicle> localizacoes = new HashMap<AID,PosVehicle>(); 
+	private HashMap<AID,PosVehicle> DistressCalls = new HashMap<AID,PosVehicle>();
+	
 	ArrayList<Incendio> incendios;
 	ArrayList<Incendio> NAincendios;
 	Rete engine;
 	Mapa mapa;
+	int nr_incendios = 0;
 	
 	protected void setup() {
 		super.setup();
@@ -49,6 +57,7 @@ public class Station extends Agent {
 		this.mapa =  (Mapa) args[0];
 		this.incendios   = new ArrayList<Incendio>();
 		this.NAincendios = new ArrayList<Incendio>();
+		this.DistressCalls = new HashMap<AID,PosVehicle>();
 		// Register Agent
 		DFAgentDescription dfd = new DFAgentDescription();
 		dfd.setName(getAID());
@@ -77,7 +86,7 @@ public class Station extends Agent {
 		
 		addBehaviour(new Update());
 		addBehaviour(new UpdateInterface(this,1000));
-		addBehaviour(new AlocarIncendios(this,200));
+		addBehaviour(new AlocarIncendios(this,100));
 	}
 
 
@@ -89,15 +98,15 @@ public class Station extends Agent {
 		}
 		
 		
-		public int getScore(PosVehicle v,Incendio fire) {
-			return Pathfinding.distancia(v.get_x(), v.get_y(),fire.cor_x, fire.cor_y) / v.speed 
-				   - v.fuel - v.fuel_capacity ;
+		public int getScore(PosVehicle v,int x,int y) {
+			return Constants.distanceWeight * Pathfinding.distancia(v.get_x(), v.get_y(),x, y) / Constants.speedWeight * v.speed 
+				   - Constants.fuelWeight * v.fuel  - Constants.fuelCapacityWeight * v.fuel_capacity ;
 			
 		}
 		
-		public void addVehicleFact(String name,PosVehicle v,Incendio fire,Rete engine) {
+		public void addVehicleFact(String name,PosVehicle v,int x,int y,Rete engine) {
 			
-			int score = getScore(v,fire);
+			int score = getScore(v,x,y);
 			
 			try {
 				
@@ -131,11 +140,7 @@ public class Station extends Agent {
 			
 		}
 		
-		public AID allocate_fire(Incendio fire) {
-			int incendioX,incendioY;
-			
-			DFAgentDescription dfd = new DFAgentDescription();
-			
+		public AID allocate_ressource(int x,int y,ArrayList<DFAgentDescription> results) {
 			
 			
 
@@ -143,34 +148,35 @@ public class Station extends Agent {
 			
 			AID best_vehicle = null; 
 
-			try {
+		
 				
-				DFAgentDescription[] results = DFService.search(this.myAgent, dfd);
-				for (int d = 0; d < results.length; d++) {
-					// Agent Found
-					
-					AID vehicle = results[d].getName();
-					
-					PosVehicle cordenada = localizacoes.get(vehicle);
-					
-					
-					if(cordenada != null) 
-						v.put(vehicle.toString(),vehicle);
-					
-					
-				}
 			
-			} catch (FIPAException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			for(int i = 0; i < results.size();i++) {
+				System.out.println(results.get(i).getName());
 			}
+				
+			for (int d = 0; d < results.size(); d++) {
+				// Agent Found
+					
+				AID vehicle = results.get(d).getName();
+					
+				PosVehicle cordenada = localizacoes.get(vehicle);
+					
+					
+				if(cordenada != null) 
+					v.put(vehicle.toString(),vehicle);
+					
+					
+			}
+			
+			
 			
 			
 			try {
 				
 					for(String key: v.keySet()) {
 						
-						addVehicleFact(key,localizacoes.get(v.get(key)),fire,engine);
+						addVehicleFact(key,localizacoes.get(v.get(key)),x,y,engine);
 					}
 					
 					addFireFact("fire",engine);
@@ -184,7 +190,6 @@ public class Station extends Agent {
 					while(iterator.hasNext()) {
 						Fact fact = (Fact) iterator.next();
 						if(fact.getName().equals("MAIN::allocation")) {
-							System.out.println(v.get(fact.getSlotValue("vehiclename"))+ "");
 							best_vehicle = v.get(fact.getSlotValue("vehiclename"));
 							break;
 						}
@@ -208,53 +213,120 @@ public class Station extends Agent {
 			}
 		
 		
+			if(best_vehicle != null) {
+				results.remove(best_vehicle);
+			}
 			
 			return best_vehicle;
 			
 		}
 		
-		@Override
-		protected void onTick() {
-			// TODO Auto-generated method stub
+		public void allocateFire(ArrayList<Incendio> New_NAincendios,int i,ArrayList<DFAgentDescription> results) {
 			
-
-			NAincendios.sort((i1,i2) -> i1.gravity < i2.gravity  ? 1:0 );
-			
-			ArrayList<Incendio> New_NAincendios = (ArrayList<Incendio>) NAincendios.clone(); 
-			
-			for(int i = 0; i < New_NAincendios.size();i++) {
-			
-
 			Incendio fire = New_NAincendios.get(i);
-
-			AID best_vehicle = allocate_fire(fire);
+			int posX = fire.cor_x;
+			int posY = fire.cor_y;
+			AID best_vehicle = allocate_ressource(posX,posY,results);
 			
 			if(best_vehicle != null) {
 				
-				System.out.println("starting work");
 				
 				
 				ACLMessage new_msg = new ACLMessage(ACLMessage.REQUEST);
 				new_msg.addReceiver(best_vehicle);
 				try {
 					new_msg.setContentObject((Serializable) fire);
-					new_msg.setOntology("job");
+					new_msg.setPerformative(ACLMessage.PROPOSE);
+					new_msg.setOntology("incendio");
 					NAincendios.remove(New_NAincendios.get(i));
 					send(new_msg);
-
+					
+			
 
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+		}
+		}
+		
+		
+		public void allocateDistressCall(HashMap<AID,PosVehicle> New_DistressCalls,AID aid,ArrayList<DFAgentDescription> results) {
+			
+			PosVehicle vehicle = New_DistressCalls.get(aid);
+			int posX = vehicle.cor_x;
+			int posY = vehicle.cor_y;
+			AID best_vehicle = allocate_ressource(posX,posY,results);
+			
+			System.out.println("answering distress call");
+			if(best_vehicle != null) {
 				
+				System.out.println("distress call " + best_vehicle.getLocalName());
+
 				
+				ACLMessage new_msg = new ACLMessage(ACLMessage.PROPOSE);
+				new_msg.addReceiver(best_vehicle);
+				try {
+					new_msg.setContentObject((Serializable) vehicle);
+					new_msg.setOntology("veiculo");
+					new_msg.setContentObject(new DistressCall(vehicle,aid));
+					DistressCalls.remove(aid);
+					send(new_msg);
+					
+			
+
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
+		}
+		}
+		
+		@Override
+		protected void onTick() {
+			// TODO Auto-generated method stub
+			
+			DFAgentDescription dfd = new DFAgentDescription();
+			ServiceDescription sd = new ServiceDescription(); 
+		    sd.setType("vehicle");
+			
+			dfd.addServices(sd);
+			
+			ArrayList<DFAgentDescription> results = new ArrayList<DFAgentDescription>();
+			
+			try {
+				Collections.addAll(results, DFService.search(this.myAgent, dfd));
+			} catch (FIPAException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			
+			
+			HashMap<AID,PosVehicle> New_DistressCalls = (HashMap<AID,PosVehicle>) DistressCalls.clone(); 
+			
+			for(AID aid:New_DistressCalls.keySet()) {
+				System.out.println(aid.getLocalName());
+				allocateDistressCall(New_DistressCalls,aid,results);
+			}
+			
+			ArrayList<Incendio> New_NAincendios = (ArrayList<Incendio>) NAincendios.clone(); 
+			New_NAincendios.sort((i1,i2) -> i1.gravity < i2.gravity  ? 1:0 );
+			
+			for(int i = 0; i < New_NAincendios.size();i++) {
+			
+					allocateFire(New_NAincendios,i,results);
+				}
+			
+
+			
+			
+			
 				
 			}
 			
 		}	
-	}
+	
 
 	private class Update extends CyclicBehaviour {
 		
@@ -264,26 +336,53 @@ public class Station extends Agent {
 			if (msg != null ) { // receber atualizações				
 				//System.out.println(msg.getSender());
 				try {
-					String ontology = msg.getOntology();
-					if(ontology.equals("fires")) {
-						new_fire(msg);
-						
+					
+					if(msg.getPerformative() == ACLMessage.AGREE) {
+						System.out.println("" + msg.getSender().getLocalName() + " starting work");
 					}
-
-					if(ontology.equals("coordenadas")) {
+					
+					else if(msg.getPerformative() == ACLMessage.REFUSE) {
+						
+						if("incendio".equals(msg.getOntology())) {
+						System.out.println(msg.getSender().getLocalName() + "refused to put fire down");
+						Incendio incendio = (Incendio) msg.getContentObject();
+						NAincendios.add(incendio);
+						}
+						
+						if("veiculo".equals(msg.getOntology())) {
+							DistressCall dc = (DistressCall) msg.getContentObject();
+							DistressCalls.put(dc.aid, dc.pos);
+						}
+				
+					}
+					
+					
+					else if(msg.getPerformative() == ACLMessage.INFORM) {
 						atualizarCordenadas(msg);
 					}
 					
-					if(ontology.equals("pedido")) {
-						System.out.println("pedido completo");
+					
+					else if(msg.getPerformative() == ACLMessage.CONFIRM) {
+						System.out.println("pedido completo " + msg.getSender().getLocalName());
 						Incendio apagado = (Incendio) msg.getContentObject();
 						incendios.remove(apagado);
 					}
 					
-					if(ontology.equals("morte")) {
-						System.out.println("Veiculo " + msg.getSender() + " não está em condições de operar");
-						localizacoes.remove(msg.getSender());
+					else if(msg.getPerformative() == ACLMessage.PROPOSE) {
+						new_fire(msg);
+						
 					}
+
+					
+					else if(msg.getPerformative() == ACLMessage.REQUEST) {
+						PosVehicle pos = (PosVehicle) msg.getContentObject();
+						DistressCalls.put(msg.getSender(), pos);
+						System.out.println(msg.getSender().getLocalName() + " precisa de ajuda");
+					}
+					
+					
+					
+					
 					
 					block();
 				} catch (UnreadableException e) {
@@ -299,6 +398,7 @@ public class Station extends Agent {
 			try {
 				
 				Incendio incendio = (Incendio) msg.getContentObject();
+				nr_incendios++;
 				NAincendios.add(incendio);
 				incendios.add(incendio);
 				
@@ -329,7 +429,7 @@ private class UpdateInterface extends TickerBehaviour {
 		
 		public void AtualizarInterface() {
 			
-			ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 			AID reader = new AID("Interface", AID.ISLOCALNAME);
 			msg.addReceiver(reader);
 			try {
@@ -340,6 +440,10 @@ private class UpdateInterface extends TickerBehaviour {
 				send(msg);	
 				msg.setOntology("info_loc");
 				msg.setContentObject((Serializable) localizacoes);
+				send(msg);
+				
+				msg.setOntology("info_nr_fires");
+				msg.setContentObject(nr_incendios);
 				send(msg);
 
 			} catch (IOException e) {

@@ -1,5 +1,6 @@
 package Agents;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -25,6 +26,13 @@ import jade.lang.acl.UnreadableException;
 
 
 import java.lang.Math;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.general.DefaultPieDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 
 public class Interface extends Agent {
 	
@@ -43,7 +51,7 @@ public class Interface extends Agent {
 		// Register Agent
 	
 		
-
+		
 		
 		addBehaviour(new AtualizarInformacao());
 	
@@ -57,19 +65,23 @@ public class Interface extends Agent {
 			
 			ACLMessage msg = receive();
 
-			if (msg != null ) { // receber atualizações				
+			if (msg != null && msg.getPerformative() == ACLMessage.INFORM) { // receber atualizações				
 					try {
 						String ontology  = msg.getOntology();
-						if(ontology.equals("info_fires") ){
-							System.out.println(msg.getSender());
+						if("info_fires".equals(ontology)){
+							//System.out.println(msg.getSender());
 							graphicalinterface.incendios = (Incendio[]) msg.getContentObject();
 
 						}
 						
-						else if(ontology.equals("info_loc")){
+						else if("info_loc".contentEquals(ontology)){
 							graphicalinterface.localizacoes = (HashMap<AID,PosVehicle>) msg.getContentObject();
 
 							
+						}
+						
+						else if("info_nr_fires".equals(ontology)) {
+							graphicalinterface.nr_incendios_total = (int) msg.getContentObject();
 						}
 					}
 					 catch (UnreadableException e) {

@@ -182,14 +182,14 @@ public class Pathfinding {
 		Pos[] shortest_path = djikstra(mapa,Curr_posX,Curr_posY,incendioX,incendioY);
 		
 	
-		System.out.println("shortest path " + shortest_path.length);
-		if(shortest_path.length <= FuelCapacity) 
+		//System.out.println("shortest path " + shortest_path.length);
+		if(shortest_path.length <= Fuel) 
 				return shortest_path;
 	
 		if(gas_stations.size() == 0)
 					return null;
 		
-		System.out.println("needs gas");
+		//System.out.println("needs gas");
 		
 		ArrayList<Pos> reachable = new ArrayList<Pos>();
 
@@ -202,11 +202,17 @@ public class Pathfinding {
 		
 		for(int i = 0;i < gas_stations.size();i++) {
 			
-			Pos[] pos_to_gs  = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,Curr_posX,Curr_posY);
-			Pos[] gs_to_fire = djikstra(mapa,incendioX,incendioY,gas_stations.get(i).x,gas_stations.get(i).y);
+			Pos[] pos_to_gs  = djikstra(mapa,Curr_posX,Curr_posY,gas_stations.get(i).x,gas_stations.get(i).y);
+			Pos[] gs_to_fire = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,incendioX,incendioY);
 			
 			if(Fuel >= pos_to_gs.length && FuelCapacity >= gs_to_fire.length ) {
-				return concatArrays(pos_to_gs,gs_to_fire);
+				Pos[] new_array = concatArrays(gs_to_fire,pos_to_gs);
+				/*System.out.println("GS: " + pos_to_gs[pos_to_gs.length - 1].x + " : " +
+						pos_to_gs[pos_to_gs.length - 1].y);
+				System.out.println("GS: " + gs_to_fire[gs_to_fire.length - 1].x + " : " +
+						gs_to_fire[gs_to_fire.length - 1].y);
+				*/
+				return  new_array;
 			}
 			
 			else if(pos_to_gs.length <= Fuel) {
@@ -220,7 +226,7 @@ public class Pathfinding {
 		
 		for(int i = 0; i < reachable.size();i++) {
 			Pos[] caminho = find_path_aux(mapa,FuelCapacity,FuelCapacity,
-					incendioX,incendioY,reachable.get(i).x,reachable.get(i).y,gas_stations);
+					reachable.get(i).x,reachable.get(i).y,incendioX,incendioY,gas_stations);
 			
 			if(caminho != null && FuelCapacity >= caminho.length)
 				return concatArrays(gas_stations_routes.get(i),caminho);
@@ -258,9 +264,9 @@ public class Pathfinding {
 		
 		for(int i = 0;i < gas_stations.size();i++) {
 			
-			Pos[] pos_to_gs  = djikstra(mapa,Curr_posX,Curr_posY,gas_stations.get(i).x,gas_stations.get(i).y);
+			Pos[] pos_to_gs  = find_path(mapa,Fuel,Fuel,Curr_posX,Curr_posY,gas_stations.get(i).x,gas_stations.get(i).y);
 			
-			if(Fuel >= pos_to_gs.length ) {
+			if(pos_to_gs != null ) {
 				return pos_to_gs;
 			}
 		}
@@ -276,35 +282,17 @@ public class Pathfinding {
 				distancia(wr2.x,wr2.y,Curr_posX,Curr_posY) 
 				? 1:0 );
 		
+		for(int i = 0; i < water_reservoirs.size();i++) {
+			
+			Pos[] path_reservoir = find_path(mapa,FuelCapacity,Fuel,
+					water_reservoirs.get(i).x,water_reservoirs.get(i).y,Curr_posX,Curr_posY);
+			
+			if(path_reservoir != null)
+				return path_reservoir;
 		
-		for(int i = 0;i < water_reservoirs.size();i++) {
-			
-			Pos[] pos_to_wr  = djikstra(mapa,Curr_posX,Curr_posY,water_reservoirs.get(i).x,water_reservoirs.get(i).y);
-			
-			if(Fuel >= pos_to_wr.length ) {
-				return pos_to_wr;
-			}
 		}
 		
-		ArrayList<Pos> gas_stations = FindByType(mapa,Constants.GasStation);
 		
-		gas_stations.sort((gs1,gs2) -> distancia(gs1.x,gs1.y,Curr_posX,Curr_posY)  <
-				distancia(gs2.x,gs2.y,Curr_posX,Curr_posY) 
-				? 1:0 );
-		
-		for(int i = 0; i < gas_stations.size();i++) {
-			for(int d = 0;d < water_reservoirs.size();d++) {
-				Pos[] pos_to_gs  = djikstra(mapa,gas_stations.get(i).x,gas_stations.get(i).y,
-						Curr_posX,Curr_posY);
-				Pos[] gs_to_wr = djikstra(mapa,water_reservoirs.get(d).x,water_reservoirs.get(d).y,
-						gas_stations.get(i).x,gas_stations.get(i).y);
-				
-				if(Fuel >= pos_to_gs.length && FuelCapacity >= gs_to_wr.length ) {
-					return concatArrays(pos_to_gs,gs_to_wr);
-				}
-			}
-			
-		}
 		
 		return null;
 	}

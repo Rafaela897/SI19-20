@@ -48,7 +48,7 @@ public class Incendio implements Serializable {
 	
 	@Override
 	public int hashCode() {
-		return (200*this.cor_x^2 + this.cor_y^3*100)%1000;
+		return (200*this.cor_x^2 + this.cor_y^3*100 +this.gravity^100)%100000;
 	}
 	
 	@Override

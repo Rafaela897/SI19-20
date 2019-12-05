@@ -27,9 +27,9 @@ public final class Constants {
 	public static final int FireStation     = 3;
 	public static final int WaterReservoir  = 4;
 
-	public static final int Nr_Trucks    =  4;
-	public static final int Nr_Drones    =  4;
-	public static final int Nr_Aircrafts =  4; 
+	public static final int Nr_Trucks    =  2;
+	public static final int Nr_Drones    =  2;
+	public static final int Nr_Aircrafts =  2; 
 	
 	public static final int Nr_GasStationCells  = 10;
 	public static final int Nr_ResidentialCells = 20;
@@ -38,5 +38,19 @@ public final class Constants {
 	
 	public static final int SizeX = 20;
 	public static final int SizeY = 20;
+	
+	public static final int StateFree = 0;
+	public static final int StateFire = 1;
+	public static final int StateBroken = 2;
+	public static final int StateRepair = 3;
+	public static final int StateEmergency = 4;
+	
+	public static final int distanceWeight = 20;
+	public static final int fuelWeight = 5;
+	public static final int fuelCapacityWeight = 1;
+	public static final int speedWeight = 1;
+	
+	
+	public static String statistics_path = "C:\\Users\\hugoa\\Desktop\\";
 	
 }
